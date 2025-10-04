@@ -1,7 +1,9 @@
 from .RedditController import RedditClient
 from .KafkaController import KafkaController
+from .extractModel import  Posts
 import logging.config
 import time
+from pydantic import ValidationError
 import yaml
 import json
 from helpers import get_settings
@@ -25,19 +27,15 @@ def main():
     while True:
         try:
             posts = reddit_client.fetch_subreddit_posts(subreddit, limit=5)
-            for category, post_list in posts.items():
-                for post in post_list:
-                    message = {
-                        "category": category,
-                        "title": post["title"],
-                        "score": post["score"],
-                        "url": post["url"],
-                        "created_utc": post["created_utc"],
-                        "body": post["post_body"],
-                        "comments": post["comments"]
-                    }
+            for post in posts:
+                try :
+                    message = Posts(**post).model_dump()
                     producer.send(topic_name, json.dumps(message))
                     logger.info(f"Sent post '{post['title'][:50]}...' to topic {topic_name}")
+                except ValidationError as e:
+                    logger.error(f"Pulled post didn't match the required schema: {e}")
+
+                
             
             producer.flush()  # ensure messages are sent
             time.sleep(60)  # wait before fetching again

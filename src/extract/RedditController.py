@@ -34,14 +34,12 @@ class RedditClient:
     def fetch_subreddit_posts(self, subreddit_name, limit=5):
         subreddit = self.reddit.subreddit(subreddit_name)
 
-        results = {
-            "new": [],
-            "hot": []
-        }
+        results = []
 
-        def process_post(post):
+        def process_post(post, category):
             """Extracts info and valid comments from a submission"""
             post_info = {
+                "category": category,
                 "title": post.title,
                 "score": post.score,
                 "url": post.url,
@@ -62,9 +60,9 @@ class RedditClient:
             return post_info
 
         for post in subreddit.new(limit=limit):
-            results["new"].append(process_post(post))
+            results.append(process_post(post, "new"))
 
         for post in subreddit.hot(limit=limit):
-            results["hot"].append(process_post(post))
+            results.append(process_post(post, "hot"))
 
         return results
