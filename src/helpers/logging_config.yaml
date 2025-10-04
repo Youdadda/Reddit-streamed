@@ -17,7 +17,7 @@ handlers:
     class: logging.handlers.RotatingFileHandler
     formatter: detailed
     filename: logs/pipeline.log
-    maxBytes: 5MB
+    maxBytes: 5242880
     backupCount: 5
     level: DEBUG
 
