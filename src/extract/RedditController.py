@@ -1,4 +1,4 @@
-from kafka import KafkaProducer
+from confluent_kafka import Producer, KafkaException
 import praw
 from dotenv import load_dotenv
 from datetime import datetime
@@ -8,7 +8,6 @@ import os
 print(os.getcwd())
 from helpers import get_settings
 import time
-from kafka.errors import NoBrokersAvailable
 from pydantic import ValidationError
 
 

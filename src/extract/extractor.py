@@ -7,6 +7,9 @@ from pydantic import ValidationError
 import yaml
 import json
 from helpers import get_settings
+# from .schema_registry import schema_str, schema_registry_client
+
+
 
 with open("helpers/logging_config.yaml", "r") as f:
     config = yaml.safe_load(f.read())
@@ -30,7 +33,7 @@ def main():
             for post in posts:
                 try :
                     message = Posts(**post).model_dump()
-                    producer.send(topic_name, json.dumps(message))
+                    producer.produce(topic_name, json.dumps(message))
                     logger.info(f"Sent post '{post['title'][:50]}...' to topic {topic_name}")
                 except ValidationError as e:
                     logger.error(f"Pulled post didn't match the required schema: {e}")

@@ -1,11 +1,7 @@
-from kafka.admin import KafkaAdminClient, NewTopic
-from kafka import KafkaProducer
-from kafka.errors import NoBrokersAvailable, TopicAlreadyExistsError
+from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka import Producer
 import time
 import logging
-
-
-
 
 class KafkaController:
     def __init__(self, bootstrap_servers, topic_name, num_partitions=3, replication_factor=1, max_retries=3):
@@ -19,31 +15,33 @@ class KafkaController:
 
     def create_topic(self):
         try:
-            admin_client = KafkaAdminClient(bootstrap_servers=self.bootstrap_servers)
-            topic = NewTopic(
-                name=self.topic_name,
-                num_partitions=self.num_partitions,
-                replication_factor=self.replication_factor
-            )
-            admin_client.create_topics([topic])
+            admin_client = AdminClient({'bootstrap.servers': self.bootstrap_servers})
+            new_topic = NewTopic(self.topic_name, num_partitions=self.num_partitions, replication_factor=self.replication_factor)
+            fs = admin_client.create_topics([new_topic])
+            # Wait for each operation to finish
+            for topic, f in fs.items():
+                try:
+                    f.result()  # The result itself is None
+                    self.logger.info(f"Topic '{topic}' created.")
+                except Exception as e:
+                    if 'TOPIC_ALREADY_EXISTS' in str(e) or 'already exists' in str(e):
+                        self.logger.info(f"Topic '{topic}' already exists.")
+                        return True
+                    else:
+                        self.logger.error(f"Failed to create topic '{topic}': {e}")
+                        return False
             return True
-        except NoBrokersAvailable:
-            self.logger.warning("No broker found, retrying in 5 seconds.")
+        except Exception as e:
+            self.logger.warning(f"Error creating topic: {e}, retrying in 5 seconds.")
             time.sleep(5)
             return False
-        except TopicAlreadyExistsError:
-            self.logger.info(f"Topic '{self.topic_name}' already exists.")
-            return True
 
     def get_producer(self):
         retry_count = 0
         while retry_count < self.max_retries:
             if self.create_topic():
                 try:
-                    self.producer = KafkaProducer(
-                        bootstrap_servers=self.bootstrap_servers,
-                        value_serializer=lambda v: v.encode('utf-8')
-                    )
+                    self.producer = Producer({'bootstrap.servers': self.bootstrap_servers})
                     return self.producer
                 except Exception as e:
                     self.logger.error(f"Failed to create producer: {str(e)}")
