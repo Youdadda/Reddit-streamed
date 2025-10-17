@@ -40,6 +40,7 @@ services:
     environment:
       - SPARK_MASTER_HOST=spark-master
       - DEBUG=1
+      - CASSANDRA_HOST=cassandra
     ports:
       - "7077:7077"
       - "8080:8080"
@@ -59,6 +60,29 @@ services:
       - "8081:8081"
     networks:
       - my_network
+  
+  cassandra:
+    container_name: cassandra
+    image: cassandra:4
+    ports:
+      - "7000:7000"
+      - "7001:7001"
+      - "7199:7199"
+      - "9042:9042"
+      - "9160:9160"
+    volumes:
+      - cassandra-db:/var/lib/cassandra
+    restart: always
+    networks:
+      - my_network
+    depends_on:
+      - spark-master
+  
+
+volumes:
+  cassandra-db:
 networks:
   my_network:
     driver: bridge
+
+

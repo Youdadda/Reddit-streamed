@@ -1,9 +1,10 @@
 from pyspark.sql import Row
-from pyspark.sql.functions import col, concat_ws, lit, from_json
+from pyspark.sql.functions import col, from_json, udf
+from pyspark.sql.types import StringType
 from utilities.ReadingSchema import posts_schema as schema
 from utilities.ReadingSchema import comment_schema
 from pyspark.sql import functions as F
-
+from pyspark.ml.feature import StopWordsRemover, RegexTokenizer
 #### Raw table
 
 def raw_table(spark_session):
@@ -47,4 +48,35 @@ def silver_table(df):
     return df_silver
 
 ### Gold Table
+## We aim to do some topic modeling so we're going to do the classic text cleaning methods,
 
+def gold_table(df):
+
+    df = df.withColumn(
+        "Cleaned_post_body",
+        F.lower(col("post_body"))
+    ) 
+    tokenizer = RegexTokenizer(
+    inputCol="Cleaned_post_body",
+    outputCol="tokens",
+    pattern="\\W"
+    )
+
+    df = tokenizer.transform(df)
+
+    remover = StopWordsRemover(
+        inputCol="tokens",
+        outputCol="Cleaned_post_body_tokens"
+    )
+    remover = remover.setStopWords(
+        remover.getStopWords() + [
+            "https", "co", "get", "like", "just", "people",
+            "know", "time", "think", "see", "good", "make",
+            "want", "need", "way", "even", "really"
+        ]
+    )
+
+    df = remover.transform(df)
+
+    df = df.drop("post_body").drop("url").drop("created").drop("tokens")
+    return df
