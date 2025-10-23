@@ -25,7 +25,6 @@ Reddit-ETL/
 │   ├── extract/           # Reddit data extraction
 │   ├── processor/         # Spark processing jobs
 │   │   ├── dependencies/  # Spark configuration
-│   │   ├── streams/      # Streaming queries
 │   │   └── utilities/    # Transformations & schemas
 │   └── helpers/          # Configuration & logging
 ├── docker/               # Container definitions
