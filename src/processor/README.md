@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS silver_table (
     category TEXT,
     title TEXT,
     score INT,
+    comments TEXT,
     url TEXT,
     post_body TEXT,
     created TIMESTAMP

@@ -13,8 +13,7 @@ submit-job:
 
 run: clean-remote deploy-files prepare-script submit-job
 
-setup-shell: 
-	clean-remote deploy-files prepare-script shell
+setup-shell: clean-remote deploy-files prepare-script shell
 
 shell:
 	docker exec -it -u 1001 spark-master /bin/bash
